@@ -250,7 +250,7 @@ const FinalPoem = ({
           {/* Actions */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={handleExport} className="stamp-button text-sm">
-              Download Image
+              Share Poetry
             </button>
             <AnimatePresence mode="wait">
               {saved ? (

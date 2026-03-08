@@ -61,7 +61,7 @@ async function fetchLongreadsArticle() {
 
 const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   const [tab, setTab] = useState<"paste" | "fetch" | "example">(
-    initialExample ? "example" : "paste"
+    initialExample ? "example" : "example"
   );
   const [text, setText] = useState("");
   const [selectedExample, setSelectedExample] = useState<string | null>(null);
@@ -115,9 +115,9 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
     (tab === "example" && selectedExample !== null);
 
   const tabs = [
-    { key: "paste" as const, label: "Paste Your Own" },
-    { key: "fetch" as const, label: "Get Fresh Text" },
     { key: "example" as const, label: "Try Example" },
+    { key: "fetch" as const, label: "Get Fresh Text" },
+    { key: "paste" as const, label: "Paste Your Own" },
   ];
 
   return (

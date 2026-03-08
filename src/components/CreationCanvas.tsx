@@ -190,7 +190,7 @@ const CreationCanvas = ({
                   className="mb-4 p-3 border-2 border-dashed border-foreground/40 bg-card/80 text-center"
                 >
                   <p className="font-mono text-xs text-muted-foreground">
-                    👆 <strong>Tap any word</strong> to keep it in your poem. Toggle <strong>Blackout</strong> to see the magic. Press <kbd className="px-1 border border-foreground/30 rounded text-[10px]">B</kbd> for shortcut.
+                    👇 <strong>Tap any word</strong> to keep it in your poem. Toggle <strong>Blackout</strong> to see the magic. Press <kbd className="px-1 border border-foreground/30 rounded text-[10px]">B</kbd> for shortcut.
                   </p>
                 </motion.div>
               )}

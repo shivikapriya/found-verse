@@ -4,6 +4,14 @@ import { parseText } from "@/hooks/useWordSelection";
 
 const EXAMPLES = [
   {
+    text: "In the coffee shop, everyone is alone together. Headphones in, eyes down, carefully avoiding the proximity of strangers. We've built invisible walls in public spaces, protecting ourselves from the possibility of connection. Sometimes I wonder if we're hiding or just afraid of being seen.",
+    poems: [
+      ["everyone", "is", "alone", "together", "carefully", "avoiding", "the", "possibility", "of", "connection"],
+      ["we've", "built", "invisible", "walls", "protecting", "ourselves", "from", "connection", "afraid", "of", "being", "seen"],
+      ["in", "the", "coffee", "shop", "eyes", "down", "hiding", "afraid", "of", "being", "seen"],
+    ],
+  },
+  {
     text: "My mother used to say that worry was just love with nowhere to go. She would stand at the window watching for my return, imagining every possible disaster. I didn't understand then that her fear was proof of how much she cared, how the world felt dangerous because I was in it.",
     poems: [
       ["worry", "was", "just", "love", "with", "nowhere", "to", "go", "imagining", "every", "possible", "disaster"],
@@ -16,14 +24,6 @@ const EXAMPLES = [
     poems: [
       ["cat", "between", "dreaming", "and", "waking", "as", "if", "they", "know", "something", "we", "don't"],
       ["exist", "in", "a", "state", "between", "dreaming", "and", "waking", "sense", "changes", "before", "we", "notice"],
-    ],
-  },
-  {
-    text: "In the coffee shop, everyone is alone together. Headphones in, eyes down, carefully avoiding the proximity of strangers. We've built invisible walls in public spaces, protecting ourselves from the possibility of connection. Sometimes I wonder if we're hiding or just afraid of being seen.",
-    poems: [
-      ["everyone", "is", "alone", "together", "carefully", "avoiding", "the", "possibility", "of", "connection"],
-      ["we've", "built", "invisible", "walls", "protecting", "ourselves", "from", "connection", "afraid", "of", "being", "seen"],
-      ["in", "the", "coffee", "shop", "eyes", "down", "hiding", "afraid", "of", "being", "seen"],
     ],
   },
 ];
@@ -174,16 +174,6 @@ const Landing = ({
         <p className="text-muted-foreground font-mono text-sm md:text-base mb-3 tracking-wider uppercase">
           Find hidden poetry in everyday text
         </p>
-
-        {/* Subtle hint */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 1 }}
-          className="font-mono text-xs text-muted-foreground/70 mb-6 italic"
-        >
-          ↓ Watch the magic — paste any text, pick your words, share your poem in 2 minutes
-        </motion.p>
 
         {/* Animated Example */}
         <AnimatePresence mode="wait">
