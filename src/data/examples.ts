@@ -24,4 +24,16 @@ export const EXAMPLE_TEXTS: ExampleText[] = [
     source: "Short Fiction",
     text: "The grocery store clerk told me she dreams about scanning items every night. Beep after beep, an endless line of customers, cans of soup and boxes of cereal passing under the red light. She said sometimes she can't tell if she's awake or still dreaming when she's at work.",
   },
+  {
+    id: "4",
+    title: "A Mother's Worry",
+    source: "Personal Reflection",
+    text: "My mother used to say that worry was just love with nowhere to go. She would stand at the window watching for my return, imagining every possible disaster. I didn't understand then that her fear was proof of how much she cared, how the world felt dangerous because I was in it.",
+  },
+  {
+    id: "5",
+    title: "City Life",
+    source: "Urban Observation",
+    text: "In the coffee shop, everyone is alone together. Headphones in, eyes down, carefully avoiding the proximity of strangers. We've built invisible walls in public spaces, protecting ourselves from the possibility of connection. Sometimes I wonder if we're hiding or just afraid of being seen.",
+  },
 ];

@@ -96,8 +96,14 @@ const Index = () => {
     case "landing":
       return (
         <Landing
-          onCreatePoem={() => { setInitialExample(false); setScreen("input"); }}
-          onTryExample={() => { setInitialExample(true); setScreen("input"); }}
+          onCreatePoem={() => {
+            setInitialExample(false);
+            setScreen("input");
+          }}
+          onTryExample={() => {
+            setInitialExample(true);
+            setScreen("input");
+          }}
           poemCount={poems.length}
           onViewVault={() => setScreen("vault")}
         />
@@ -129,6 +135,8 @@ const Index = () => {
       return (
         <FinalPoem
           poem={finalPoem}
+          sourceText={sourceText}
+          selectedIndices={selectedIndices}
           sourceTitle={sourceTitle}
           onSave={handleSave}
           onEdit={() => setScreen("canvas")}
@@ -145,7 +153,6 @@ const Index = () => {
             setSourceText(poem.sourceText);
             setSourceTitle(poem.sourceTitle);
             reset();
-            // Restore selections
             poem.selectedIndices.forEach((i) => toggleWord(i));
             setScreen("final");
           }}
