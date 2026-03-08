@@ -1,7 +1,8 @@
-import { useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useRef, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toPng } from "html-to-image";
 import { parseText } from "@/hooks/useWordSelection";
+import confetti from "canvas-confetti";
 
 interface FinalPoemProps {
   poem: string;
@@ -23,6 +24,7 @@ const FinalPoem = ({
   onNewPoem,
 }: FinalPoemProps) => {
   const exportRef = useRef<HTMLDivElement>(null);
+  const [saved, setSaved] = useState(false);
   const poemWords = useMemo(() => poem.split("\n").filter(Boolean), [poem]);
   const allWords = useMemo(() => parseText(sourceText), [sourceText]);
   const textWords = useMemo(
@@ -59,6 +61,18 @@ const FinalPoem = ({
     }
   };
 
+  const handleSave = () => {
+    onSave();
+    setSaved(true);
+    // Celebration!
+    confetti({
+      particleCount: 80,
+      spread: 60,
+      origin: { y: 0.7 },
+      colors: ["#1a1a1a", "#f4ecd8", "#d4c5a0"],
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col paper-texture">
       <header className="border-b-2 border-foreground px-4 py-4">
@@ -82,28 +96,52 @@ const FinalPoem = ({
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="w-full max-w-lg"
         >
-          {/* Preview display (what user sees) */}
-          <div className="bg-card border-2 border-foreground p-10 md:p-16 shadow-[var(--shadow-dramatic)] vignette relative halftone-overlay">
-            <div className="flex flex-wrap gap-3 justify-center relative z-10">
-              {poemWords.map((word, i) => {
-                const rotation = ((i * 7) % 5) - 2;
+          {/* Celebration message */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-center mb-6"
+          >
+            <p className="font-display text-2xl mb-1">✨ You made a poem</p>
+            <p className="font-mono text-xs text-muted-foreground">
+              {poemWords.length} words found in the noise
+            </p>
+          </motion.div>
+
+          {/* Preview display — shows blackout view */}
+          <div className="bg-card border-2 border-foreground p-6 md:p-8 shadow-[var(--shadow-dramatic)] vignette relative halftone-overlay">
+            <div className="flex flex-wrap gap-x-2 gap-y-1 relative z-10 leading-[2.2]">
+              {textWords.map((word) => {
+                const isSelected = selectedIndices.has(word.index);
+                const rotation = ((word.index * 7) % 5) - 2;
+                if (isSelected) {
+                  return (
+                    <span
+                      key={word.index}
+                      className="word-blackout-visible font-serif text-sm md:text-base font-bold"
+                      style={{ transform: `rotate(${rotation}deg)` }}
+                    >
+                      {word.text}
+                    </span>
+                  );
+                }
                 return (
                   <span
-                    key={i}
-                    className="word-selected-box font-serif font-bold text-lg md:text-xl"
-                    style={{ transform: `rotate(${rotation}deg)` }}
+                    key={word.index}
+                    className="word-blacked-out font-serif text-sm md:text-base"
                   >
-                    {word}
+                    {word.text}
                   </span>
                 );
               })}
             </div>
             {sourceTitle && (
-              <p className="mt-8 text-xs font-mono text-muted-foreground text-center italic relative z-10">
+              <p className="mt-6 text-xs font-mono text-muted-foreground text-center italic relative z-10">
                 Found in: {sourceTitle}
               </p>
             )}
-            <div className="mt-4 text-center relative z-10">
+            <div className="mt-3 text-center relative z-10">
               <p className="text-[10px] font-mono text-muted-foreground/60">
                 Made with Blackout Poetry Generator
               </p>
@@ -113,7 +151,7 @@ const FinalPoem = ({
             </div>
           </div>
 
-          {/* Hidden export element with full blackout view */}
+          {/* Hidden export element — full blackout view */}
           <div
             ref={exportRef}
             className="absolute -left-[9999px] top-0"
@@ -214,12 +252,26 @@ const FinalPoem = ({
             <button onClick={handleExport} className="stamp-button text-sm">
               Download Image
             </button>
-            <button
-              onClick={onSave}
-              className="py-3 px-6 border-2 border-foreground font-mono text-sm uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              Save to Vault
-            </button>
+            <AnimatePresence mode="wait">
+              {saved ? (
+                <motion.span
+                  key="saved"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="py-3 px-6 border-2 border-foreground font-mono text-sm uppercase tracking-widest bg-muted text-center"
+                >
+                  ✓ Saved!
+                </motion.span>
+              ) : (
+                <motion.button
+                  key="save"
+                  onClick={handleSave}
+                  className="py-3 px-6 border-2 border-foreground font-mono text-sm uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  Save to Vault
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
           <div className="mt-4 flex justify-center gap-6">
             <button
