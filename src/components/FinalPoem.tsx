@@ -123,7 +123,7 @@ const handleExportDownload = async () => {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-center mb-6"
           >
-            <p className="font-display text-2xl mb-1">✨ You Made with the-blackout-poetrya poem</p>
+            <p className="font-display text-2xl mb-1">✨ You made a poem</p>
             <p className="font-mono text-xs text-muted-foreground">
               {poemWords.length} words found in the noise
             </p>
