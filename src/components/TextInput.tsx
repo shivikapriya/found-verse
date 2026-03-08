@@ -8,8 +8,16 @@ interface TextInputProps {
   initialExample?: boolean;
 }
 
-async function fetchInternetArchiveArticle() {
-  const feed = "https://blog.archive.org/feed/";
+const LOADING_MESSAGES = [
+  "Scanning the archives...",
+  "Digging through long reads...",
+  "Finding something worth blacking out...",
+  "Unearthing hidden poetry...",
+  "Searching for your next masterpiece...",
+];
+
+async function fetchLongreadsArticle() {
+  const feed = "https://longreads.com/feed/";
   const proxy = "https://api.allorigins.win/raw?url=";
 
   const res = await fetch(proxy + encodeURIComponent(feed));
@@ -26,7 +34,6 @@ async function fetchInternetArchiveArticle() {
   const title = item.querySelector("title")?.textContent || "Untitled";
   const link = item.querySelector("link")?.textContent || "";
 
-  // Get content:encoded or description
   let html = "";
   const content = item.getElementsByTagName("content:encoded")[0];
   if (content) {
@@ -40,7 +47,6 @@ async function fetchInternetArchiveArticle() {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Truncate to 250-350 words
   const words = text.split(/\s+/);
   if (words.length > 350) {
     text = words.slice(0, 350).join(" ") + "...";
@@ -60,12 +66,12 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   const [text, setText] = useState("");
   const [selectedExample, setSelectedExample] = useState<string | null>(null);
 
-  // Fetch state
   const [fetchedText, setFetchedText] = useState("");
   const [fetchedSource, setFetchedSource] = useState("");
   const [fetchedUrl, setFetchedUrl] = useState("");
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState("");
+  const [loadingMsg, setLoadingMsg] = useState(LOADING_MESSAGES[0]);
 
   const MAX_CHARS = 2000;
   const MIN_CHARS = 50;
@@ -73,14 +79,21 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   const handleFetch = async () => {
     setIsFetching(true);
     setFetchError("");
+    // Cycle loading messages
+    let msgIdx = 0;
+    const msgInterval = setInterval(() => {
+      msgIdx = (msgIdx + 1) % LOADING_MESSAGES.length;
+      setLoadingMsg(LOADING_MESSAGES[msgIdx]);
+    }, 2000);
     try {
-      const result = await fetchInternetArchiveArticle();
+      const result = await fetchLongreadsArticle();
       setFetchedText(result.text.slice(0, MAX_CHARS));
       setFetchedSource(result.source);
       setFetchedUrl(result.url);
     } catch {
       setFetchError("Couldn't fetch fresh text. Try using an example instead!");
     } finally {
+      clearInterval(msgInterval);
       setIsFetching(false);
     }
   };
@@ -186,8 +199,8 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div className="flex items-center gap-2 font-mono text-sm">
-                  <span className="text-muted-foreground">📚</span>
-                  <span>Internet Archive Blog</span>
+                  <span className="text-muted-foreground">📖</span>
+                  <span>Longreads</span>
                 </div>
                 <button
                   onClick={handleFetch}
@@ -257,11 +270,15 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
               ) : (
                 !isFetching && (
                   <div className="h-64 md:h-80 border-2 border-dashed border-foreground bg-card flex items-center justify-center">
-                    <p className="font-mono text-sm text-muted-foreground text-center px-8">
-                      Fetch a random article from the Internet Archive Blog
-                      <br />
-                      to turn into poetry
-                    </p>
+                    <div className="text-center px-8">
+                      <p className="font-display text-xl mb-2">📖</p>
+                      <p className="font-mono text-sm text-muted-foreground">
+                        Fetch a long-form article from Longreads
+                      </p>
+                      <p className="font-mono text-xs text-muted-foreground/70 mt-1">
+                        Great essays waiting to become poetry
+                      </p>
+                    </div>
                   </div>
                 )
               )}
@@ -269,10 +286,35 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
               {isFetching && (
                 <div className="h-64 md:h-80 border-2 border-foreground bg-card flex items-center justify-center">
                   <div className="text-center">
-                    <div className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                    <p className="font-mono text-sm text-muted-foreground">
-                      Fetching from Internet Archive...
-                    </p>
+                    {/* Ink spreading animation */}
+                    <div className="relative w-16 h-16 mx-auto mb-4">
+                      <motion.div
+                        className="absolute inset-0 rounded-full bg-foreground"
+                        initial={{ scale: 0, opacity: 0.8 }}
+                        animate={{ scale: [0, 1.2, 0.8, 1], opacity: [0.8, 0.3, 0.6, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <motion.div
+                        className="absolute inset-2 rounded-full bg-foreground"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [0, 1, 0.6, 0.8] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                      />
+                      <motion.div
+                        className="absolute inset-4 rounded-full bg-card"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [0, 0.8, 1, 0.9] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                      />
+                    </div>
+                    <motion.p
+                      key={loadingMsg}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="font-mono text-sm text-muted-foreground"
+                    >
+                      {loadingMsg}
+                    </motion.p>
                   </div>
                 </div>
               )}
