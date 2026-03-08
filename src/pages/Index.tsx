@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { v4 } from "@/lib/utils";
+
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useWordSelection, parseText } from "@/hooks/useWordSelection";
 import Landing from "@/components/Landing";
