@@ -8,52 +8,49 @@ interface TextInputProps {
   initialExample?: boolean;
 }
 
-const RSS_FEEDS: Record<string, string> = {
-  "Philosophy & Ideas": "https://aeon.co/feed.rss",
-  "Literary Culture": "https://lithub.com/feed/",
-  "Poetic Essays": "https://www.themarginalian.org/feed/",
-};
+async function fetchInternetArchiveArticle() {
+  const feed = "https://blog.archive.org/feed/";
+  const proxy = "https://api.allorigins.win/raw?url=";
 
-async function fetchFreshText(feedKey: string) {
-  const feedUrl = RSS_FEEDS[feedKey];
-  if (!feedUrl) throw new Error("Unknown feed");
+  const res = await fetch(proxy + encodeURIComponent(feed));
+  if (!res.ok) throw new Error("Failed to fetch feed");
 
-  const response = await fetch(
-    `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`
-  );
-  const data = await response.json();
+  const xmlText = await res.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(xmlText, "text/xml");
+  const items = [...xml.querySelectorAll("item")];
 
-  if (data.status !== "ok" || !data.items?.length) {
-    throw new Error("Feed failed");
+  if (!items.length) throw new Error("No articles found");
+
+  const item = items[Math.floor(Math.random() * items.length)];
+  const title = item.querySelector("title")?.textContent || "Untitled";
+  const link = item.querySelector("link")?.textContent || "";
+
+  // Get content:encoded or description
+  let html = "";
+  const content = item.getElementsByTagName("content:encoded")[0];
+  if (content) {
+    html = content.textContent || "";
+  } else {
+    html = item.querySelector("description")?.textContent || "";
   }
 
-  const item = data.items[Math.floor(Math.random() * data.items.length)];
-
-  let text = (item.description || "")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&rsquo;/g, "'")
-    .replace(/&lsquo;/g, "'")
-    .replace(/&ldquo;/g, "\u201C")
-    .replace(/&rdquo;/g, "\u201D")
-    .replace(/&mdash;/g, "\u2014")
-    .replace(/&ndash;/g, "\u2013")
-    .replace(/&[a-z]+;/gi, " ")
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  let text = (doc.body.textContent || "")
     .replace(/\s+/g, " ")
     .trim();
 
+  // Truncate to 250-350 words
   const words = text.split(/\s+/);
   if (words.length > 350) {
     text = words.slice(0, 350).join(" ") + "...";
   }
 
-  return {
-    text,
-    source: item.title || feedKey,
-    url: item.link || "",
-  };
+  if (words.length < 30) {
+    throw new Error("Text too short");
+  }
+
+  return { text, source: title, url: link };
 }
 
 const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
@@ -64,7 +61,6 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   const [selectedExample, setSelectedExample] = useState<string | null>(null);
 
   // Fetch state
-  const [selectedFeed, setSelectedFeed] = useState(Object.keys(RSS_FEEDS)[0]);
   const [fetchedText, setFetchedText] = useState("");
   const [fetchedSource, setFetchedSource] = useState("");
   const [fetchedUrl, setFetchedUrl] = useState("");
@@ -78,10 +74,7 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
     setIsFetching(true);
     setFetchError("");
     try {
-      const result = await fetchFreshText(selectedFeed);
-      if (result.text.length < 50) {
-        throw new Error("Text too short, try again");
-      }
+      const result = await fetchInternetArchiveArticle();
       setFetchedText(result.text.slice(0, MAX_CHARS));
       setFetchedSource(result.source);
       setFetchedUrl(result.url);
@@ -192,17 +185,10 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
               className="space-y-4"
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <select
-                  value={selectedFeed}
-                  onChange={(e) => setSelectedFeed(e.target.value)}
-                  className="bg-card border-2 border-foreground font-mono text-sm px-3 py-2 focus:outline-none cursor-pointer"
-                >
-                  {Object.keys(RSS_FEEDS).map((key) => (
-                    <option key={key} value={key}>
-                      {key}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2 font-mono text-sm">
+                  <span className="text-muted-foreground">📚</span>
+                  <span>Internet Archive Blog</span>
+                </div>
                 <button
                   onClick={handleFetch}
                   disabled={isFetching}
@@ -272,9 +258,9 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                 !isFetching && (
                   <div className="h-64 md:h-80 border-2 border-dashed border-foreground bg-card flex items-center justify-center">
                     <p className="font-mono text-sm text-muted-foreground text-center px-8">
-                      Select a source and click "Fetch Fresh Text"
+                      Fetch a random article from the Internet Archive Blog
                       <br />
-                      to get real content to turn into poetry
+                      to turn into poetry
                     </p>
                   </div>
                 )
@@ -285,7 +271,7 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                   <div className="text-center">
                     <div className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                     <p className="font-mono text-sm text-muted-foreground">
-                      Fetching fresh content...
+                      Fetching from Internet Archive...
                     </p>
                   </div>
                 </div>
