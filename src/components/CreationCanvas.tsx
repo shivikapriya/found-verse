@@ -29,6 +29,9 @@ const Word = ({
 }) => {
   const [justTapped, setJustTapped] = useState(false);
 
+  // Deterministic wobble per word
+  const rotation = useMemo(() => (token.index * 7 % 5) - 2, [token.index]);
+
   const handleClick = () => {
     onToggle();
     setJustTapped(true);
@@ -37,51 +40,43 @@ const Word = ({
 
   if (token.isLineBreak) return <br />;
 
-  let className = "font-mono text-sm md:text-base cursor-pointer select-none inline-block px-0.5 py-0.5 transition-all duration-200 ";
+  let className =
+    "font-serif text-sm md:text-base cursor-pointer select-none inline-block transition-all duration-200 ";
 
   if (blackoutMode) {
     if (isSelected) {
-      className += "word-blackout-selected font-bold ";
+      className += "word-blackout-visible ";
     } else {
-      className += "word-faded ";
+      className += "word-blacked-out ";
     }
   } else {
     if (isSelected) {
-      className += "word-selected font-bold ";
+      className += "word-selected-box ";
     } else {
-      className += "hover:bg-accent/30 ";
+      className += "px-0.5 py-0.5 word-hover-underline ";
     }
   }
 
-  if (justTapped) {
-    className += "animate-stamp-in ";
+  const style: React.CSSProperties = {};
+  if (isSelected && !blackoutMode) {
+    style.transform = `rotate(${rotation}deg)`;
+  }
+  if (isSelected && blackoutMode) {
+    style.transform = `rotate(${rotation}deg)`;
+  }
+  if (justTapped && isSelected) {
+    style.transform = `scale(1.1) rotate(${rotation}deg)`;
   }
 
   return (
     <motion.span
       onClick={handleClick}
       className={className}
-      whileTap={{ scale: 1.1, rotate: Math.random() * 6 - 3 }}
-      style={{ minWidth: "24px", minHeight: "24px" }}
+      style={{ ...style, minWidth: "24px", minHeight: "24px" }}
+      whileTap={{ scale: 1.1 }}
     >
       {token.text}
     </motion.span>
-  );
-};
-
-const MemoizedWord = ({ token, isSelected, blackoutMode, onToggle }: {
-  token: WordToken;
-  isSelected: boolean;
-  blackoutMode: boolean;
-  onToggle: () => void;
-}) => {
-  return (
-    <Word
-      token={token}
-      isSelected={isSelected}
-      blackoutMode={blackoutMode}
-      onToggle={onToggle}
-    />
   );
 };
 
@@ -113,7 +108,6 @@ const CreationCanvas = ({
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "b" && !e.metaKey && !e.ctrlKey) {
-        // only if not typing in input
         if ((e.target as HTMLElement).tagName !== "INPUT") {
           setBlackoutMode((m) => !m);
         }
@@ -132,14 +126,19 @@ const CreationCanvas = ({
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background/90 backdrop-blur border-b-2 border-foreground px-4 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between flex-wrap gap-2">
-          <button onClick={onBack} className="font-mono text-sm hover:text-muted-foreground transition-colors">
+          <button
+            onClick={onBack}
+            className="font-mono text-sm hover:text-muted-foreground transition-colors"
+          >
             ← Back
           </button>
           <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
             Step 2 of 3 · Select Words
           </span>
           <div className="flex items-center gap-4">
-            <span className="font-mono text-xs font-bold">{wordCount} words</span>
+            <span className="font-mono text-xs font-bold">
+              {wordCount} words
+            </span>
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs">Blackout</span>
               <button
@@ -181,14 +180,18 @@ const CreationCanvas = ({
       <main className="flex-1 flex">
         <div className="flex-1 px-4 md:px-8 py-6">
           <div className="max-w-3xl mx-auto">
-            <div className="bg-card border-2 border-foreground p-6 md:p-8 leading-[2.4] flex flex-wrap gap-x-2 gap-y-1 shadow-[var(--shadow-card)]">
+            <div className="bg-card border-2 border-foreground p-6 md:p-8 leading-[2.4] flex flex-wrap gap-x-2 gap-y-1 shadow-[var(--shadow-card)] halftone-overlay relative">
               {words.map((token, i) => (
-                <MemoizedWord
+                <Word
                   key={i}
                   token={token}
-                  isSelected={!token.isLineBreak && selectedIndices.has(token.index)}
+                  isSelected={
+                    !token.isLineBreak && selectedIndices.has(token.index)
+                  }
                   blackoutMode={blackoutMode}
-                  onToggle={() => !token.isLineBreak && onToggleWord(token.index)}
+                  onToggle={() =>
+                    !token.isLineBreak && onToggleWord(token.index)
+                  }
                 />
               ))}
             </div>
@@ -219,7 +222,9 @@ const CreationCanvas = ({
           <button
             onClick={onFinish}
             disabled={wordCount < 3}
-            className={`stamp-button text-sm ${wordCount < 3 ? "opacity-30 cursor-not-allowed" : ""}`}
+            className={`stamp-button text-sm ${
+              wordCount < 3 ? "opacity-30 cursor-not-allowed" : ""
+            }`}
           >
             Finish Poem →
           </button>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,58 +6,56 @@
 
 @layer base {
   :root {
-    /* Newspaper Noir Palette */
-    --background: 40 33% 90%;        /* aged-paper #e8e0d0 */
-    --foreground: 0 0% 10%;          /* ink-black #1a1a1a */
+    /* Austin Kleon Newspaper Blackout Palette */
+    --background: 38 30% 88%;          /* aged newsprint #e8dcc8 */
+    --foreground: 0 0% 10%;            /* ink-black #1a1a1a */
 
-    --card: 39 38% 93%;              /* newsprint-white #f5f1e8 */
+    --card: 38 35% 91%;                /* newsprint cream #f4ecd8 */
     --card-foreground: 0 0% 10%;
 
-    --popover: 39 38% 93%;
+    --popover: 38 35% 91%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 0 0% 10%;             /* ink-black */
-    --primary-foreground: 39 38% 93%; /* newsprint-white */
+    --primary: 0 0% 0%;                /* marker-black #000000 */
+    --primary-foreground: 38 35% 91%;
 
-    --secondary: 36 20% 75%;         /* coffee-stain #c4b5a0 */
+    --secondary: 36 20% 75%;           /* coffee-stain */
     --secondary-foreground: 0 0% 10%;
 
-    --muted: 36 20% 82%;
+    --muted: 36 18% 82%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 47 100% 62%;           /* marker-yellow #ffd93d */
-    --accent-foreground: 0 0% 10%;
+    --accent: 0 0% 10%;                /* ink-black for accent (NO yellow) */
+    --accent-foreground: 38 35% 91%;
 
-    --destructive: 0 70% 50%;        /* stamp-red #d32f2f */
-    --destructive-foreground: 39 38% 93%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 38 35% 91%;
 
-    --border: 36 20% 75%;
-    --input: 36 20% 80%;
+    --border: 36 20% 70%;
+    --input: 36 20% 78%;
     --ring: 0 0% 10%;
 
-    --radius: 0.25rem;
+    --radius: 0.125rem;
 
     /* Custom tokens */
-    --marker-yellow: 47 100% 62%;
-    --stamp-red: 0 70% 50%;
-    --vintage-gold: 43 65% 52%;
-    --blue-ink: 210 52% 36%;
-    --newsprint: 39 38% 93%;
-    --aged-paper: 40 33% 90%;
-    --coffee-stain: 36 20% 75%;
+    --newsprint: 38 35% 91%;
+    --aged-paper: 38 30% 88%;
     --ink-black: 0 0% 10%;
+    --marker-black: 0 0% 0%;
+    --coffee-stain: 36 20% 75%;
+    --halftone: 0 0% 0%;
 
     --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.15);
     --shadow-dramatic: 0 8px 32px rgba(0, 0, 0, 0.25);
 
-    --sidebar-background: 40 33% 90%;
+    --sidebar-background: 38 30% 88%;
     --sidebar-foreground: 0 0% 10%;
     --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 39 38% 93%;
-    --sidebar-accent: 36 20% 82%;
+    --sidebar-primary-foreground: 38 35% 91%;
+    --sidebar-accent: 36 18% 82%;
     --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 36 20% 75%;
+    --sidebar-border: 36 20% 70%;
     --sidebar-ring: 0 0% 10%;
   }
 }
@@ -68,7 +66,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-mono;
+    @apply bg-background text-foreground;
     font-family: 'Courier New', Courier, monospace;
   }
 
@@ -82,7 +80,21 @@
 @layer utilities {
   /* Paper texture via SVG noise */
   .paper-texture {
+    background-color: hsl(var(--background));
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+
+  /* Halftone dot pattern overlay */
+  .halftone-overlay {
+    position: relative;
+  }
+  .halftone-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 4px 4px;
+    pointer-events: none;
   }
 
   /* Torn edge effect */
@@ -109,24 +121,40 @@
     box-shadow: inset 0 0 0 3px hsl(var(--foreground)), 0 1px 2px rgba(0,0,0,0.2);
   }
 
-  .word-selected {
-    @apply bg-accent text-accent-foreground;
+  /* Austin Kleon style: hand-drawn black box around selected words */
+  .word-selected-box {
     display: inline-block;
-    transform: rotate(-0.5deg);
-    box-shadow: 2px 2px 0 hsl(var(--foreground) / 0.2);
+    border: 3px solid hsl(var(--marker-black));
+    padding: 1px 5px;
+    position: relative;
+    border-radius: 1px;
   }
 
-  .word-blackout-selected {
-    @apply bg-primary text-primary-foreground;
+  /* Blackout mode: solid black coverage for non-selected words */
+  .word-blacked-out {
+    background: hsl(var(--marker-black));
+    color: hsl(var(--marker-black));
     display: inline-block;
-    padding: 1px 3px;
-    box-shadow: 2px 2px 0 hsl(var(--foreground) / 0.3);
+    padding: 2px 4px;
+    border-radius: 1px;
+    user-select: none;
   }
 
-  .word-faded {
-    opacity: 0.12;
-    filter: blur(0.5px);
-    transition: opacity 0.4s ease, filter 0.4s ease;
+  /* Blackout mode: selected word stays visible with box */
+  .word-blackout-visible {
+    display: inline-block;
+    border: 3px solid hsl(var(--marker-black));
+    padding: 1px 5px;
+    font-weight: 700;
+    position: relative;
+    border-radius: 1px;
+  }
+
+  /* Hover underline for canvas words */
+  .word-hover-underline:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
   }
 
   .vignette {
