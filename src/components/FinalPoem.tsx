@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toPng } from "html-to-image";
 import { parseText } from "@/hooks/useWordSelection";
 import confetti from "canvas-confetti";
+  import html2canvas from "html2canvas";
+
 
 interface FinalPoemProps {
   poem: string;
@@ -61,6 +63,24 @@ const FinalPoem = ({
     }
   };
 
+
+const handleExportDownload = async () => {
+  if (!exportRef.current) return;
+
+  const canvas = await html2canvas(exportRef.current, {
+    scale: 3, 
+    backgroundColor: "#f4ecd8",
+    useCORS: true, // needed if you have images from other origins
+  });
+
+  const dataUrl = canvas.toDataURL("image/png");
+
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = `blackout-poem-${Date.now()}.png`;
+  link.click();
+};
+
   const handleSave = () => {
     onSave();
     setSaved(true);
@@ -103,7 +123,7 @@ const FinalPoem = ({
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-center mb-6"
           >
-            <p className="font-display text-2xl mb-1">✨ You made a poem</p>
+            <p className="font-display text-2xl mb-1">✨ You Made with the-blackout-poetrya poem</p>
             <p className="font-mono text-xs text-muted-foreground">
               {poemWords.length} words found in the noise
             </p>
@@ -143,7 +163,7 @@ const FinalPoem = ({
             )}
             <div className="mt-3 text-center relative z-10">
               <p className="text-[10px] font-mono text-muted-foreground/60">
-                Made with Blackout Poetry Generator
+                Made with The Blackout Poetry
               </p>
               <p className="text-[9px] font-mono text-muted-foreground/40 mt-0.5">
                 (It takes 2 minutes to beat boredom)
@@ -232,7 +252,7 @@ const FinalPoem = ({
                 textAlign: "center",
               }}
             >
-              Made with Blackout Poetry Generator
+                Made with The Blackout Poetry
             </p>
             <p
               style={{
@@ -249,7 +269,7 @@ const FinalPoem = ({
 
           {/* Actions */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={handleExport} className="stamp-button text-sm">
+            <button onClick={handleExportDownload} className="stamp-button text-sm">
               Share Poetry
             </button>
             <AnimatePresence mode="wait">

@@ -219,9 +219,8 @@ const Landing = ({
           {EXAMPLES.map((_, i) => (
             <span
               key={i}
-              className={`w-2 h-2 rounded-full border border-foreground transition-all ${
-                i === exampleIdx ? "bg-foreground scale-125" : "bg-transparent"
-              }`}
+              className={`w-2 h-2 rounded-full border border-foreground transition-all ${i === exampleIdx ? "bg-foreground scale-125" : "bg-transparent"
+                }`}
             />
           ))}
         </div>
@@ -256,7 +255,21 @@ const Landing = ({
         </div>
 
         <p className="mt-10 text-xs text-muted-foreground font-mono">
-          Inspired by Austin Kleon's <em>Newspaper Blackout</em>
+          Inspired by Austin Kleon's           <a
+            href="https://newspaperblackout.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-primary"
+          ><em>Newspaper Blackout</em></a> ||
+          Made with 🖤 by{' '}
+          <a
+            href="https://x.com/shivikapriya"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-primary"
+          >
+            Priya Srivastava
+          </a>
         </p>
       </motion.div>
 
