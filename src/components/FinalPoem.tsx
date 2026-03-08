@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toPng } from "html-to-image";
 
@@ -12,20 +12,22 @@ interface FinalPoemProps {
 
 const FinalPoem = ({ poem, sourceTitle, onSave, onEdit, onNewPoem }: FinalPoemProps) => {
   const poemRef = useRef<HTMLDivElement>(null);
+  const poemWords = useMemo(() => poem.split("\n").filter(Boolean), [poem]);
 
-  const handleShare = async () => {
+  const handleExport = async () => {
     if (!poemRef.current) return;
     try {
       const dataUrl = await toPng(poemRef.current, {
         width: 1080,
         height: 1080,
         pixelRatio: 2,
-        backgroundColor: "#e8e0d0",
+        backgroundColor: "#f4ecd8",
         style: {
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "120px",
+          padding: "100px",
           width: "1080px",
           height: "1080px",
         },
@@ -75,25 +77,41 @@ const FinalPoem = ({ poem, sourceTitle, onSave, onEdit, onNewPoem }: FinalPoemPr
           {/* Poem display */}
           <div
             ref={poemRef}
-            className="bg-card border-2 border-foreground p-10 md:p-16 shadow-[var(--shadow-dramatic)] vignette relative"
+            className="bg-card border-2 border-foreground p-10 md:p-16 shadow-[var(--shadow-dramatic)] vignette relative halftone-overlay"
           >
-            <p className="font-mono font-bold text-lg md:text-xl leading-[2.2] tracking-wider text-center whitespace-pre-wrap">
-              {poem}
-            </p>
+            <div className="flex flex-wrap gap-3 justify-center relative z-10">
+              {poemWords.map((word, i) => {
+                const rotation = (i * 7 % 5) - 2;
+                return (
+                  <span
+                    key={i}
+                    className="word-selected-box font-serif font-bold text-lg md:text-xl"
+                    style={{ transform: `rotate(${rotation}deg)` }}
+                  >
+                    {word}
+                  </span>
+                );
+              })}
+            </div>
             {sourceTitle && (
-              <p className="mt-8 text-xs font-mono text-muted-foreground text-center italic">
+              <p className="mt-8 text-xs font-mono text-muted-foreground text-center italic relative z-10">
                 Found in: {sourceTitle}
               </p>
             )}
-            <p className="mt-2 text-[10px] font-mono text-muted-foreground/50 text-center">
-              Created with Blackout Poetry Generator
-            </p>
+            <div className="mt-4 text-center relative z-10">
+              <p className="text-[10px] font-mono text-muted-foreground/60">
+                Made with Blackout Poetry Generator
+              </p>
+              <p className="text-[9px] font-mono text-muted-foreground/40 mt-0.5">
+                (It takes 2 minutes to beat boredom)
+              </p>
+            </div>
           </div>
 
           {/* Actions */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-            <button onClick={handleShare} className="stamp-button text-sm">
-              Share as Image
+            <button onClick={handleExport} className="stamp-button text-sm">
+              Download Image
             </button>
             <button
               onClick={onSave}

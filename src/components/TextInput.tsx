@@ -8,16 +8,51 @@ interface TextInputProps {
   initialExample?: boolean;
 }
 
-async function fetchRandomWikipedia() {
+const RSS_FEEDS: Record<string, string> = {
+  "Philosophy & Ideas": "https://aeon.co/feed.rss",
+  "Literary Culture": "https://lithub.com/feed/",
+  "Poetic Essays": "https://www.themarginalian.org/feed/",
+};
+
+async function fetchFreshText(feedKey: string) {
+  const feedUrl = RSS_FEEDS[feedKey];
+  if (!feedUrl) throw new Error("Unknown feed");
+
   const response = await fetch(
-    "https://en.wikipedia.org/api/rest_v1/page/random/summary"
+    `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`
   );
-  if (!response.ok) throw new Error("Failed to fetch");
   const data = await response.json();
+
+  if (data.status !== "ok" || !data.items?.length) {
+    throw new Error("Feed failed");
+  }
+
+  const item = data.items[Math.floor(Math.random() * data.items.length)];
+
+  let text = (item.description || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&ldquo;/g, "\u201C")
+    .replace(/&rdquo;/g, "\u201D")
+    .replace(/&mdash;/g, "\u2014")
+    .replace(/&ndash;/g, "\u2013")
+    .replace(/&[a-z]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const words = text.split(/\s+/);
+  if (words.length > 350) {
+    text = words.slice(0, 350).join(" ") + "...";
+  }
+
   return {
-    text: data.extract as string,
-    source: data.title as string,
-    url: data.content_urls?.desktop?.page as string,
+    text,
+    source: item.title || feedKey,
+    url: item.link || "",
   };
 }
 
@@ -29,6 +64,7 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   const [selectedExample, setSelectedExample] = useState<string | null>(null);
 
   // Fetch state
+  const [selectedFeed, setSelectedFeed] = useState(Object.keys(RSS_FEEDS)[0]);
   const [fetchedText, setFetchedText] = useState("");
   const [fetchedSource, setFetchedSource] = useState("");
   const [fetchedUrl, setFetchedUrl] = useState("");
@@ -36,26 +72,30 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   const [fetchError, setFetchError] = useState("");
 
   const MAX_CHARS = 2000;
+  const MIN_CHARS = 50;
 
   const handleFetch = async () => {
     setIsFetching(true);
     setFetchError("");
     try {
-      const result = await fetchRandomWikipedia();
+      const result = await fetchFreshText(selectedFeed);
+      if (result.text.length < 50) {
+        throw new Error("Text too short, try again");
+      }
       setFetchedText(result.text.slice(0, MAX_CHARS));
       setFetchedSource(result.source);
       setFetchedUrl(result.url);
     } catch {
-      setFetchError("Failed to fetch. Try again or use an example instead.");
+      setFetchError("Couldn't fetch fresh text. Try using an example instead!");
     } finally {
       setIsFetching(false);
     }
   };
 
   const handleSubmit = () => {
-    if (tab === "paste" && text.trim()) {
+    if (tab === "paste" && text.trim().length >= MIN_CHARS) {
       onSubmit(text.trim());
-    } else if (tab === "fetch" && fetchedText.trim()) {
+    } else if (tab === "fetch" && fetchedText.trim().length >= MIN_CHARS) {
       onSubmit(fetchedText.trim(), fetchedSource || undefined);
     } else if (tab === "example" && selectedExample) {
       const ex = EXAMPLE_TEXTS.find((e) => e.id === selectedExample);
@@ -64,13 +104,13 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
   };
 
   const isReady =
-    (tab === "paste" && text.trim().length > 0) ||
-    (tab === "fetch" && fetchedText.trim().length > 0) ||
+    (tab === "paste" && text.trim().length >= MIN_CHARS) ||
+    (tab === "fetch" && fetchedText.trim().length >= MIN_CHARS) ||
     (tab === "example" && selectedExample !== null);
 
   const tabs = [
     { key: "paste" as const, label: "Paste Your Own" },
-    { key: "fetch" as const, label: "Fetch Fresh" },
+    { key: "fetch" as const, label: "Get Fresh Text" },
     { key: "example" as const, label: "Try Example" },
   ];
 
@@ -121,10 +161,16 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                 autoFocus
                 value={text}
                 onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
-                placeholder="Paste any text: article, email, book passage, tweet..."
+                placeholder="Paste any text here: articles, essays, book passages..."
                 className="w-full h-64 md:h-80 p-6 bg-card border-2 border-dashed border-foreground font-mono text-sm leading-relaxed resize-none focus:outline-none focus:border-solid placeholder:text-muted-foreground"
               />
-              <div className="flex justify-end mt-2">
+              <div className="flex justify-between mt-2">
+                {text.length > 0 && text.length < MIN_CHARS && (
+                  <span className="font-mono text-xs text-muted-foreground">
+                    Need at least {MIN_CHARS} characters
+                  </span>
+                )}
+                <span className="ml-auto" />
                 <span
                   className={`font-mono text-xs ${
                     text.length > 1900
@@ -145,10 +191,18 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-sm text-muted-foreground">
-                  📚 Random Wikipedia Article
-                </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <select
+                  value={selectedFeed}
+                  onChange={(e) => setSelectedFeed(e.target.value)}
+                  className="bg-card border-2 border-foreground font-mono text-sm px-3 py-2 focus:outline-none cursor-pointer"
+                >
+                  {Object.keys(RSS_FEEDS).map((key) => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
                 <button
                   onClick={handleFetch}
                   disabled={isFetching}
@@ -160,14 +214,22 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                     ? "Fetching..."
                     : fetchedText
                     ? "Get Different Text"
-                    : "Get Fresh Text"}
+                    : "Fetch Fresh Text"}
                 </button>
               </div>
 
               {fetchError && (
-                <p className="font-mono text-xs text-destructive">
-                  {fetchError}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-xs text-destructive">
+                    {fetchError}
+                  </p>
+                  <button
+                    onClick={() => setTab("example")}
+                    className="font-mono text-xs underline underline-offset-2 text-muted-foreground hover:text-foreground"
+                  >
+                    Use example instead
+                  </button>
+                </div>
               )}
 
               {fetchedText ? (
@@ -191,7 +253,7 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                           rel="noopener noreferrer"
                           className="font-mono text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
                         >
-                          ↗
+                          ↗ Original
                         </a>
                       )}
                     </div>
@@ -210,9 +272,9 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                 !isFetching && (
                   <div className="h-64 md:h-80 border-2 border-dashed border-foreground bg-card flex items-center justify-center">
                     <p className="font-mono text-sm text-muted-foreground text-center px-8">
-                      Click "Get Fresh Text" to fetch a random
+                      Select a source and click "Fetch Fresh Text"
                       <br />
-                      Wikipedia article to turn into poetry
+                      to get real content to turn into poetry
                     </p>
                   </div>
                 )
@@ -244,7 +306,7 @@ const TextInput = ({ onSubmit, onBack, initialExample }: TextInputProps) => {
                   onClick={() => setSelectedExample(ex.id)}
                   className={`w-full text-left p-4 border-2 transition-all font-mono ${
                     selectedExample === ex.id
-                      ? "border-foreground bg-accent/30 shadow-[var(--shadow-card)]"
+                      ? "border-foreground bg-primary/5 shadow-[var(--shadow-card)]"
                       : "border-secondary bg-card hover:border-foreground"
                   }`}
                 >
